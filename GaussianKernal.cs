@@ -1,4 +1,5 @@
-﻿/// <summary>
+﻿using System;
+/// <summary>
 /// The following code was written by Thomas Clarke on 20th of April 2022
 /// 
 /// Licenced using the MIT Licence
@@ -263,5 +264,72 @@ namespace GaussianKernel
 
             return new GaussianKernel3D(buffer, size);
         }
+
+        public static GaussianKernel2D Generate2DLapacianOfGaussianKernel(int size, double sigma = 1)
+        {
+            double sum = 0.0;
+            double[] buffer = new double[(int)System.Math.Pow(size, 2)];
+            int mean = size / 2;
+
+            int index = 0;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++, index++)
+                {
+                    buffer[index] = CalcLog2D(x - mean, y - mean, sigma);
+
+                    // Accumulate the kernel values
+                    sum += buffer[index];
+                }
+            }
+
+            return new GaussianKernel2D(buffer, size);
+        }
+
+        private static double CalcLog2D(int x, int y, double sigma)
+        {
+            double nomenator = 1 - (System.Math.Pow(y, 2) + System.Math.Pow(x, 2)) / (2 * (System.Math.Pow(sigma, 2)));
+            double denomenator = 2 * System.Math.PI * (System.Math.Pow(sigma, 4));
+            double exponet = System.Math.Exp(-(System.Math.Pow(x, 2) + System.Math.Pow(y, 2)) / (2 * (System.Math.Pow(sigma, 2))));
+            return (nomenator * exponet) / denomenator;
+        }
+
+        public static GaussianKernel3D Generate3DLapacianOfGaussianKernel(int size, double sigma = 1)
+        {
+            double sum = 0.0;
+            double[] buffer = new double[(int)System.Math.Pow(size, 5)];
+            int mean = size / 2;
+
+            int index = 0;
+            for (int z = 0; z < size; z++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    for (int x = 0; x < size; x++, index++)
+                    {
+                        // 
+                        buffer[index] = CalcLog3D(x - mean, y - mean, z - mean, sigma);
+
+                        // Accumulate the kernel values
+                        sum += buffer[index];
+                    }
+                }
+            }
+
+            // Normalize the kernel
+            for (index = 0; index < buffer.Length; index++)
+                buffer[index] /= sum;
+
+            return new GaussianKernel3D(buffer, size);
+        }
+
+        private static double CalcLog3D(int x, int y, int z, double sigma)
+        {
+            double nomenator = System.Math.Pow(y, 2) + System.Math.Pow(x, 2) + System.Math.Pow(z, 2) - 3 * (System.Math.Pow(sigma, 3));
+            double denomenator = 3 * System.Math.PI * (System.Math.Pow(sigma, 6));
+            double exponet = System.Math.Exp(-System.Math.Pow(x, 2) + System.Math.Pow(y, 2) + System.Math.Pow(z, 2)) / (3 * (System.Math.Pow(sigma, 3)));
+            return (nomenator * exponet) / denomenator;
+        }
+
     }
 }
